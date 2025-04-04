@@ -1,7 +1,8 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { toast } from "sonner";
 import { Product } from '@/data/products';
+import { supabase } from "@/integrations/supabase/client";
 
 type CartItem = {
   product: Product;

@@ -1,204 +1,223 @@
 
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useToast } from '@/hooks/use-toast';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+
+type FormValues = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+};
 
 const Signup = () => {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [acceptTerms, setAcceptTerms] = useState(false);
-  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data.user) {
+        navigate('/');
+      }
+    };
     
-    if (!acceptTerms) {
-      toast({
-        title: "Please accept the terms and conditions",
-        variant: "destructive",
+    checkUser();
+  }, [navigate]);
+
+  const form = useForm<FormValues>({
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
+  });
+
+  const onSubmit = async (data: FormValues) => {
+    if (data.password !== data.confirmPassword) {
+      form.setError('confirmPassword', { 
+        type: 'validate', 
+        message: 'Passwords do not match' 
       });
       return;
     }
     
-    if (password !== confirmPassword) {
-      toast({
-        title: "Passwords do not match",
-        variant: "destructive",
-      });
-      return;
-    }
+    setIsLoading(true);
     
-    // In a real app, this would connect to a backend service
-    if (firstName && lastName && email && password) {
-      toast({
-        title: "Account created successfully",
-        description: "Welcome to Cherry Boutique!",
+    try {
+      // Sign up the user
+      const { error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            first_name: data.firstName,
+            last_name: data.lastName,
+          }
+        }
       });
+      
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      
+      toast.success('Account created successfully! Please check your email to verify your account.');
+      navigate('/login');
+    } catch (error) {
+      console.error('Signup error:', error);
+      toast.error('An error occurred during signup');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-grow bg-gray-50 flex items-center justify-center py-12">
-        <div className="container max-w-md mx-auto px-4">
-          <div className="bg-white rounded-lg shadow-sm p-8">
-            <div className="text-center mb-6">
-              <h1 className="text-2xl font-bold text-gray-900">Create an Account</h1>
-              <p className="text-gray-600 mt-1">Join Cherry Boutique today</p>
-            </div>
-            
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="first-name" className="text-gray-700">
-                      First Name
-                    </Label>
-                    <Input
-                      id="first-name"
-                      type="text"
-                      placeholder="John"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      required
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="last-name" className="text-gray-700">
-                      Last Name
-                    </Label>
-                    <Input
-                      id="last-name"
-                      type="text"
-                      placeholder="Doe"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      required
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <Label htmlFor="email" className="text-gray-700">
-                    Email address
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="mt-1"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="password" className="text-gray-700">
-                    Password
-                  </Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="mt-1"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="confirm-password" className="text-gray-700">
-                    Confirm Password
-                  </Label>
-                  <Input
-                    id="confirm-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    className="mt-1"
-                  />
-                </div>
-                
-                <div className="flex items-center">
-                  <Checkbox
-                    id="terms"
-                    checked={acceptTerms}
-                    onCheckedChange={(checked) => setAcceptTerms(checked as boolean)}
-                  />
-                  <Label htmlFor="terms" className="ml-2 text-gray-700">
-                    I accept the{' '}
-                    <a href="#" className="text-cherry hover:underline">
-                      Terms and Conditions
-                    </a>
-                  </Label>
-                </div>
-                
-                <Button type="submit" className="w-full btn-cherry py-6">
-                  Create Account
-                </Button>
-              </div>
-            </form>
-            
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">
-                    Or sign up with
-                  </span>
-                </div>
-              </div>
-              
-              <div className="mt-6 grid grid-cols-2 gap-3">
-                <Button variant="outline" className="py-5 flex items-center justify-center">
-                  <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                    <path
-                      fill="currentColor"
-                      d="M12 2C6.477 2 2 6.477 2 12C2 17.523 6.477 22 12 22C17.523 22 22 17.523 22 12C22 6.477 17.523 2 12 2Z"
-                    />
-                  </svg>
-                  Google
-                </Button>
-                <Button variant="outline" className="py-5 flex items-center justify-center">
-                  <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                    <path
-                      fill="currentColor"
-                      d="M12 2C6.477 2 2 6.477 2 12C2 17.523 6.477 22 12 22C17.523 22 22 17.523 22 12C22 6.477 17.523 2 12 2Z"
-                    />
-                  </svg>
-                  Facebook
-                </Button>
-              </div>
-            </div>
-            
-            <p className="mt-8 text-center text-sm text-gray-600">
-              Already have an account?{' '}
-              <Link to="/login" className="text-cherry hover:underline font-medium">
-                Sign in
-              </Link>
-            </p>
-          </div>
+    <div className="container mx-auto px-4 py-16 flex justify-center items-center min-h-[calc(100vh-200px)]">
+      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold">Create Account</h1>
+          <p className="text-gray-600 mt-2">Join Cherry Shop today</p>
         </div>
-      </main>
-      <Footer />
+        
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="firstName"
+                rules={{ required: 'First name is required' }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="John" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="lastName"
+                rules={{ required: 'Last name is required' }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Last Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Doe" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <FormField
+              control={form.control}
+              name="email"
+              rules={{ 
+                required: 'Email is required',
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: 'Invalid email address',
+                }
+              }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="email" 
+                      placeholder="you@example.com" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="password"
+              rules={{ 
+                required: 'Password is required',
+                minLength: {
+                  value: 6,
+                  message: 'Password must be at least 6 characters',
+                } 
+              }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="password" 
+                      placeholder="••••••••" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              rules={{ required: 'Please confirm your password' }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Confirm Password</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="password" 
+                      placeholder="••••••••" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={isLoading}
+            >
+              {isLoading ? 'Creating account...' : 'Create Account'}
+            </Button>
+          </form>
+        </Form>
+        
+        <div className="text-center mt-4">
+          <p className="text-sm text-gray-600">
+            Already have an account? {' '}
+            <Link to="/login" className="text-cherry hover:underline font-semibold">
+              Sign in
+            </Link>
+          </p>
+        </div>
+      </div>
     </div>
   );
 };
