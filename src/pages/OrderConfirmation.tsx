@@ -3,7 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Json } from '@/integrations/supabase/types'; // Import the Json type from Supabase
+import { Json } from '@/integrations/supabase/types'; 
+import { BubbleGroup } from '@/components/ui/bubbles';
 
 type OrderDetails = {
   id: string;
@@ -111,8 +112,9 @@ const OrderConfirmation = () => {
   });
   
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
+    <div className="container mx-auto px-4 py-8 relative">
+      <BubbleGroup count={12} area="large" className="absolute inset-0 pointer-events-none" />
+      <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md relative z-10">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-green-600 mb-2">Order Confirmed!</h1>
           <p className="text-gray-600">Thank you for your purchase</p>
