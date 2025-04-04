@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Json } from '@/integrations/supabase/types'; // Import the Json type from Supabase
 
 type OrderDetails = {
   id: string;
@@ -49,7 +50,27 @@ const OrderConfirmation = () => {
           throw error;
         }
         
-        setOrder(data as OrderDetails);
+        // Fix: Cast the data to OrderDetails and ensure shipping_address has the expected structure
+        if (data && data.shipping_address) {
+          const shippingAddress = data.shipping_address as {
+            firstName: string;
+            lastName: string;
+            address: string;
+            city: string;
+            state: string;
+            zipCode: string;
+            email: string;
+            phone: string;
+          };
+          
+          setOrder({
+            id: data.id,
+            created_at: data.created_at,
+            status: data.status,
+            total_amount: data.total_amount,
+            shipping_address: shippingAddress
+          });
+        }
       } catch (error) {
         console.error('Error fetching order details:', error);
       } finally {

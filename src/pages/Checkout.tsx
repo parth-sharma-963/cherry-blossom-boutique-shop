@@ -104,13 +104,15 @@ const Checkout = () => {
       }
 
       // Create order items
+      // Fix: Convert product_id from number to string to match Supabase type
       const orderItems = cartItems.map(item => ({
         order_id: order.id,
-        product_id: item.product.id,
+        product_id: String(item.product.id), // Convert to string to match Supabase type
         quantity: item.quantity,
         price: item.product.price,
       }));
 
+      // Fix: Use multiple inserts for array of items
       const { error: itemsError } = await supabase
         .from('order_items')
         .insert(orderItems);
