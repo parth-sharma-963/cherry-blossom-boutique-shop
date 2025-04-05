@@ -22,6 +22,7 @@ import { Bubbles } from '@/components/ui/bubbles';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
+import { useScript } from '@/hooks/useScript';
 
 // Define the schema for the checkout form
 const checkoutSchema = z.object({
@@ -38,12 +39,19 @@ const checkoutSchema = z.object({
 
 type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
 const Checkout = () => {
   const { cartItems, cartTotal, clearCart } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
+  const scriptStatus = useScript('https://checkout.razorpay.com/v1/checkout.js');
   
   // Redirect to cart if cart is empty
   useEffect(() => {
@@ -68,6 +76,57 @@ const Checkout = () => {
     },
   });
   
+  const handleRazorpayPayment = (orderData: any, formData: CheckoutFormValues) => {
+    if (scriptStatus !== 'ready') {
+      toast.error("Payment system is loading. Please try again.");
+      setIsSubmitting(false);
+      setProcessingPayment(false);
+      return;
+    }
+    
+    const options = {
+      key: orderData.keyId,
+      amount: orderData.amount,
+      currency: orderData.currency,
+      name: "Cherry Fashion",
+      description: "Purchase of fashion items",
+      order_id: orderData.orderId,
+      handler: function(response: any) {
+        // Store combined order info in session storage for retrieval after payment
+        const fullOrderInfo = {
+          ...orderData.orderInfo,
+          paymentId: response.razorpay_payment_id,
+          signature: response.razorpay_signature,
+        };
+        
+        sessionStorage.setItem('orderInfo', JSON.stringify(fullOrderInfo));
+        clearCart();
+        navigate('/order-confirmation?payment_id=' + response.razorpay_payment_id);
+      },
+      prefill: {
+        name: `${formData.firstName} ${formData.lastName}`,
+        email: formData.email,
+        contact: formData.phone,
+      },
+      notes: {
+        address: formData.address,
+      },
+      theme: {
+        color: "#e91e63",
+      },
+      modal: {
+        ondismiss: function() {
+          setIsSubmitting(false);
+          setProcessingPayment(false);
+          toast.error("Payment cancelled. Please try again.");
+        },
+      },
+    };
+    
+    const razorpayInstance = new window.Razorpay(options);
+    razorpayInstance.open();
+  };
+  
   const onSubmit = async (data: CheckoutFormValues) => {
     try {
       setIsSubmitting(true);
@@ -86,7 +145,7 @@ const Checkout = () => {
       
       setProcessingPayment(true);
       
-      // Create payment session with Stripe
+      // Create payment session with Razorpay
       const response = await supabase.functions.invoke('create-payment', {
         body: { orderInfo },
       });
@@ -95,11 +154,8 @@ const Checkout = () => {
         throw new Error(response.error.message || 'Failed to create payment session');
       }
       
-      // Store order info in session storage for retrieval after payment
-      sessionStorage.setItem('orderInfo', JSON.stringify(orderInfo));
-      
-      // Redirect to Stripe checkout
-      window.location.href = response.data.url;
+      // Process payment with Razorpay
+      handleRazorpayPayment(response.data, data);
       
     } catch (error) {
       console.error('Payment error:', error);
@@ -276,7 +332,7 @@ const Checkout = () => {
                       <Button
                         type="submit"
                         className="w-full bg-cherry hover:bg-cherry/90 text-white py-6"
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || scriptStatus !== 'ready'}
                       >
                         {processingPayment ? (
                           <>
@@ -289,6 +345,18 @@ const Checkout = () => {
                           "Proceed to Payment"
                         )}
                       </Button>
+                      
+                      {scriptStatus === 'loading' && (
+                        <p className="text-sm text-gray-500 mt-2 text-center">
+                          Loading payment system...
+                        </p>
+                      )}
+                      
+                      {scriptStatus === 'error' && (
+                        <p className="text-sm text-red-500 mt-2 text-center">
+                          Failed to load payment system. Please refresh the page.
+                        </p>
+                      )}
                     </div>
                   </form>
                 </Form>
