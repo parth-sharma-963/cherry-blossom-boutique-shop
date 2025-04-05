@@ -1,12 +1,13 @@
 
-import React from 'react';
-import { useLocation, useNavigate, Navigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate, Navigate, useSearchParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Package, Truck, Calendar, ArrowRight } from 'lucide-react';
+import { CheckCircle, Package, Truck, Calendar, ArrowRight, CreditCard } from 'lucide-react';
 import { Bubbles } from '@/components/ui/bubbles';
 import Newsletter from '@/components/Newsletter';
+import { useCart } from '@/context/CartContext';
 
 type OrderInfoType = {
   firstName: string;
@@ -24,9 +25,71 @@ type OrderInfoType = {
 const OrderConfirmation = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const orderInfo = location.state?.orderInfo as OrderInfoType;
+  const [searchParams] = useSearchParams();
+  const [orderInfo, setOrderInfo] = useState<OrderInfoType | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { clearCart } = useCart();
   
-  // Redirect if no order info
+  // Process the order on component mount
+  useEffect(() => {
+    const processOrder = async () => {
+      try {
+        // Check if we have a session_id from Stripe
+        const sessionId = searchParams.get('session_id');
+        
+        if (sessionId) {
+          // Get the order info from session storage
+          const savedOrderInfo = sessionStorage.getItem('orderInfo');
+          
+          if (savedOrderInfo) {
+            const parsedOrderInfo = JSON.parse(savedOrderInfo);
+            setOrderInfo(parsedOrderInfo);
+            
+            // Clear the cart after successful payment
+            clearCart();
+            
+            // Remove the order info from session storage
+            sessionStorage.removeItem('orderInfo');
+          } else {
+            // If no order info is found, redirect to products
+            navigate('/products');
+          }
+        } else if (location.state?.orderInfo) {
+          // Fallback to the legacy approach using location state
+          setOrderInfo(location.state.orderInfo);
+          clearCart();
+        } else {
+          // If no order info is found, redirect to products
+          navigate('/products');
+        }
+      } catch (error) {
+        console.error('Error processing order:', error);
+        navigate('/products');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    processOrder();
+  }, [location.state, navigate, searchParams, clearCart]);
+  
+  // Show loading or redirect if no order info
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-grow flex items-center justify-center">
+          <div className="animate-pulse text-center">
+            <h2 className="text-2xl font-semibold mb-4">Processing your order...</h2>
+            <p className="text-gray-500">Please wait while we confirm your payment</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+  
+  // Redirect if no order info after loading
   if (!orderInfo) {
     return <Navigate to="/products" />;
   }
@@ -76,6 +139,16 @@ const OrderConfirmation = () => {
                       <p className="text-sm text-gray-500">Total</p>
                       <p className="font-semibold">${(orderInfo.total + orderInfo.total * 0.08).toFixed(2)}</p>
                     </div>
+                  </div>
+                </div>
+                
+                <div className="mb-6 p-4 border border-green-200 bg-green-50 rounded-lg flex items-start">
+                  <CreditCard className="text-green-500 mr-3 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-green-800">Payment Successful</p>
+                    <p className="text-sm text-green-700">
+                      Your payment has been processed successfully
+                    </p>
                   </div>
                 </div>
                 

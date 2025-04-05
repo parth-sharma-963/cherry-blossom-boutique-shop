@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -20,6 +20,8 @@ import {
 } from '@/components/ui/form';
 import { Bubbles } from '@/components/ui/bubbles';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { Loader2 } from 'lucide-react';
 
 // Define the schema for the checkout form
 const checkoutSchema = z.object({
@@ -39,7 +41,9 @@ type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 const Checkout = () => {
   const { cartItems, cartTotal, clearCart } = useCart();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [processingPayment, setProcessingPayment] = useState(false);
   
   // Redirect to cart if cart is empty
   useEffect(() => {
@@ -64,33 +68,55 @@ const Checkout = () => {
     },
   });
   
-  const onSubmit = (data: CheckoutFormValues) => {
-    setIsSubmitting(true);
-    
-    // Simulate processing order
-    setTimeout(() => {
-      clearCart();
-      navigate('/order-confirmation', { 
-        state: { 
-          orderInfo: {
-            ...data,
-            items: cartItems,
-            total: cartTotal,
-            orderNumber: Math.floor(Math.random() * 1000000).toString().padStart(6, '0'),
-            orderDate: new Date(),
-          } 
-        } 
-      });
-      setIsSubmitting(false);
+  const onSubmit = async (data: CheckoutFormValues) => {
+    try {
+      setIsSubmitting(true);
       
-      // Show success toast
-      toast.success("Order placed successfully!");
-    }, 1500);
+      // Generate order number
+      const orderNumber = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+      
+      // Create order info object
+      const orderInfo = {
+        ...data,
+        items: cartItems,
+        total: cartTotal,
+        orderNumber,
+        orderDate: new Date(),
+      };
+      
+      setProcessingPayment(true);
+      
+      // Create payment session with Stripe
+      const response = await supabase.functions.invoke('create-payment', {
+        body: { orderInfo },
+      });
+      
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to create payment session');
+      }
+      
+      // Store order info in session storage for retrieval after payment
+      sessionStorage.setItem('orderInfo', JSON.stringify(orderInfo));
+      
+      // Redirect to Stripe checkout
+      window.location.href = response.data.url;
+      
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast.error("Payment processing failed. Please try again.");
+      setIsSubmitting(false);
+      setProcessingPayment(false);
+    }
   };
   
   if (cartItems.length === 0) {
     return null; // Will redirect via useEffect
   }
+  
+  // Calculate tax
+  const tax = cartTotal * 0.08;
+  // Calculate grand total
+  const grandTotal = cartTotal + tax;
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -252,7 +278,16 @@ const Checkout = () => {
                         className="w-full bg-cherry hover:bg-cherry/90 text-white py-6"
                         disabled={isSubmitting}
                       >
-                        {isSubmitting ? 'Processing...' : 'Complete Order'}
+                        {processingPayment ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Processing...
+                          </>
+                        ) : isSubmitting ? (
+                          "Processing..."
+                        ) : (
+                          "Proceed to Payment"
+                        )}
                       </Button>
                     </div>
                   </form>
@@ -308,14 +343,14 @@ const Checkout = () => {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Tax</span>
-                      <span className="font-medium">${(cartTotal * 0.08).toFixed(2)}</span>
+                      <span className="font-medium">${tax.toFixed(2)}</span>
                     </div>
                   </div>
                   
                   <div className="border-t border-gray-200 mt-4 pt-4">
                     <div className="flex justify-between font-bold text-lg">
                       <span>Total</span>
-                      <span>${(cartTotal + cartTotal * 0.08).toFixed(2)}</span>
+                      <span>${grandTotal.toFixed(2)}</span>
                     </div>
                   </div>
                   
