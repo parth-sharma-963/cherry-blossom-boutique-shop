@@ -91,3 +91,48 @@ export function BubbleGroup({
     </div>
   );
 }
+
+interface BubblesProps {
+  className?: string;
+  bubbleCount?: number;
+  colors?: string[];
+  maxSize?: number;
+  minSize?: number;
+  speed?: number;
+}
+
+export function Bubbles({
+  className,
+  bubbleCount = 10,
+  colors = ["#e1bee7", "#f8bbd0", "#ffcdd2"],
+  maxSize = 100,
+  minSize = 20,
+  speed = 20,
+}: BubblesProps) {
+  return (
+    <div className={cn("absolute inset-0 overflow-hidden", className)}>
+      {Array.from({ length: bubbleCount }).map((_, i) => {
+        const size = minSize + Math.random() * (maxSize - minSize);
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const animationDuration = (speed / 10) + (Math.random() * speed / 10);
+        
+        return (
+          <div
+            key={i}
+            className="rounded-full absolute animate-float"
+            style={{
+              width: `${size}px`,
+              height: `${size}px`,
+              backgroundColor: color,
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              opacity: 0.3 + Math.random() * 0.4,
+              animationDuration: `${animationDuration}s`,
+              animationDelay: `${Math.random() * animationDuration}s`,
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+}
