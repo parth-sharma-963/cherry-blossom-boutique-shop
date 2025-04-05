@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { ShoppingCart, Heart, ArrowLeft, Minus, Plus, Check } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/hooks/use-toast';
+import { BubbleGroup } from '@/components/ui/bubbles';
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -82,9 +83,11 @@ const ProductDetail = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-grow bg-gray-50">
+      <main className="flex-grow bg-gray-50 relative">
+        <BubbleGroup count={6} area="large" className="absolute right-0 top-0 opacity-30 pointer-events-none" />
+        
         {/* Back button */}
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-4 relative z-10">
           <Button 
             variant="ghost" 
             asChild 
@@ -98,7 +101,7 @@ const ProductDetail = () => {
         </div>
         
         {/* Product Detail Section */}
-        <div className="container mx-auto px-4 py-6">
+        <div className="container mx-auto px-4 py-6 relative z-10">
           <div className="bg-white rounded-lg shadow-sm overflow-hidden">
             <div className="flex flex-col md:flex-row">
               {/* Product Images */}
@@ -256,7 +259,7 @@ const ProductDetail = () => {
         
         {/* Related Products */}
         {relatedProducts.length > 0 && (
-          <div className="container mx-auto px-4 py-10">
+          <div className="container mx-auto px-4 py-10 relative z-10">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">You May Also Like</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {relatedProducts.map(relatedProduct => (

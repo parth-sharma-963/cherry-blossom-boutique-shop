@@ -242,10 +242,12 @@ const Cart = () => {
                   </div>
                 </div>
                 
-                {/* Checkout Button */}
-                <Button className="w-full btn-cherry py-6 text-lg">
-                  Proceed to Checkout
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                {/* Checkout Button - Fixed: Now properly links to checkout */}
+                <Button asChild className="w-full btn-cherry py-6 text-lg">
+                  <Link to="/checkout">
+                    Proceed to Checkout
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
                 </Button>
                 
                 {/* Payment Methods */}
