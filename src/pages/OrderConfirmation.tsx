@@ -1,167 +1,191 @@
 
-import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import React from 'react';
+import { useLocation, useNavigate, Navigate } from 'react-router-dom';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
-import { Json } from '@/integrations/supabase/types'; 
-import { BubbleGroup } from '@/components/ui/bubbles';
+import { CheckCircle, Package, Truck, Calendar, ArrowRight } from 'lucide-react';
+import { Bubbles } from '@/components/ui/bubbles';
+import Newsletter from '@/components/Newsletter';
 
-type OrderDetails = {
-  id: string;
-  created_at: string;
-  status: string;
-  total_amount: number;
-  shipping_address: {
-    firstName: string;
-    lastName: string;
-    address: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    email: string;
-    phone: string;
-  };
+type OrderInfoType = {
+  firstName: string;
+  lastName: string;
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  items: any[];
+  total: number;
+  orderNumber: string;
+  orderDate: Date;
 };
 
 const OrderConfirmation = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [order, setOrder] = useState<OrderDetails | null>(null);
-  const [loading, setLoading] = useState(true);
+  const orderInfo = location.state?.orderInfo as OrderInfoType;
   
-  // Get the order ID from the location state or fallback to URL params
-  const orderId = location.state?.orderId;
-  
-  useEffect(() => {
-    const fetchOrderDetails = async () => {
-      if (!orderId) {
-        setLoading(false);
-        return;
-      }
-      
-      try {
-        // Get the order details
-        const { data, error } = await supabase
-          .from('orders')
-          .select('*')
-          .eq('id', orderId)
-          .single();
-          
-        if (error) {
-          throw error;
-        }
-        
-        // Fix: Cast the data to OrderDetails and ensure shipping_address has the expected structure
-        if (data && data.shipping_address) {
-          const shippingAddress = data.shipping_address as {
-            firstName: string;
-            lastName: string;
-            address: string;
-            city: string;
-            state: string;
-            zipCode: string;
-            email: string;
-            phone: string;
-          };
-          
-          setOrder({
-            id: data.id,
-            created_at: data.created_at,
-            status: data.status,
-            total_amount: data.total_amount,
-            shipping_address: shippingAddress
-          });
-        }
-      } catch (error) {
-        console.error('Error fetching order details:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchOrderDetails();
-  }, [orderId]);
-  
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/2 mx-auto mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/3 mx-auto mb-8"></div>
-          <div className="h-64 bg-gray-200 rounded w-full max-w-md mx-auto"></div>
-        </div>
-      </div>
-    );
+  // Redirect if no order info
+  if (!orderInfo) {
+    return <Navigate to="/products" />;
   }
   
-  if (!orderId || !order) {
-    return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <h1 className="text-3xl font-bold mb-4">Order Not Found</h1>
-        <p className="text-gray-600 mb-8">We couldn't find the order you're looking for.</p>
-        <Button onClick={() => navigate('/products')}>Continue Shopping</Button>
-      </div>
-    );
-  }
-  
-  // Format date to be more readable
-  const orderDate = new Date(order.created_at).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  const estimatedDelivery = new Date();
+  estimatedDelivery.setDate(estimatedDelivery.getDate() + 5);
   
   return (
-    <div className="container mx-auto px-4 py-8 relative">
-      <BubbleGroup count={12} area="large" className="absolute inset-0 pointer-events-none" />
-      <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md relative z-10">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-green-600 mb-2">Order Confirmed!</h1>
-          <p className="text-gray-600">Thank you for your purchase</p>
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      
+      <main className="flex-grow">
+        <div className="container mx-auto px-4 py-12">
+          <div className="max-w-3xl mx-auto">
+            <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 relative overflow-hidden">
+              <Bubbles 
+                className="absolute inset-0 z-0 opacity-5" 
+                bubbleCount={15} 
+                colors={["#e1bee7", "#f8bbd0", "#ffcdd2"]} 
+                maxSize={100}
+                minSize={30}
+                speed={20}
+              />
+              
+              <div className="relative z-10">
+                <div className="flex items-center justify-center mb-8">
+                  <CheckCircle className="h-16 w-16 text-green-500 mr-4" />
+                  <div>
+                    <h1 className="text-3xl font-bold text-gray-900">Order Confirmed!</h1>
+                    <p className="text-gray-600">Thank you for your purchase.</p>
+                  </div>
+                </div>
+                
+                <div className="bg-gray-50 p-4 rounded-lg mb-6">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-sm text-gray-500">Order Number</p>
+                      <p className="font-semibold">#{orderInfo.orderNumber}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Order Date</p>
+                      <p className="font-semibold">
+                        {new Date(orderInfo.orderDate).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Total</p>
+                      <p className="font-semibold">${(orderInfo.total + orderInfo.total * 0.08).toFixed(2)}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mb-8">
+                  <h2 className="text-xl font-semibold mb-4">Shipping Information</h2>
+                  <div className="p-4 border border-gray-200 rounded-lg">
+                    <p className="font-medium">
+                      {orderInfo.firstName} {orderInfo.lastName}
+                    </p>
+                    <p className="text-gray-600">{orderInfo.address}</p>
+                    <p className="text-gray-600">
+                      {orderInfo.city}, {orderInfo.state} {orderInfo.zipCode}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="mb-8">
+                  <h2 className="text-xl font-semibold mb-4">Order Items</h2>
+                  <div className="space-y-4">
+                    {orderInfo.items.map((item) => (
+                      <div 
+                        key={item.product.id} 
+                        className="flex items-center p-3 border border-gray-200 rounded-lg"
+                      >
+                        <div className="w-16 h-16 bg-gray-100 rounded overflow-hidden mr-4">
+                          <img 
+                            src={item.product.image} 
+                            alt={item.product.name} 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex-grow">
+                          <p className="font-medium">{item.product.name}</p>
+                          <p className="text-gray-500 text-sm">Qty: {item.quantity}</p>
+                        </div>
+                        <div className="font-medium">
+                          ${(item.product.price * item.quantity).toFixed(2)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="mb-8">
+                  <h2 className="text-xl font-semibold mb-4">Delivery Timeline</h2>
+                  <div className="relative">
+                    <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+                    
+                    <div className="relative flex mb-6">
+                      <div className="flex items-center justify-center w-8 h-8 bg-cherry rounded-full shrink-0 z-10">
+                        <Package className="h-4 w-4 text-white" />
+                      </div>
+                      <div className="ml-4">
+                        <h3 className="font-medium">Order Processing</h3>
+                        <p className="text-sm text-gray-500">Your order has been received and is being processed.</p>
+                      </div>
+                    </div>
+                    
+                    <div className="relative flex mb-6">
+                      <div className="flex items-center justify-center w-8 h-8 bg-gray-200 rounded-full shrink-0 z-10">
+                        <Truck className="h-4 w-4 text-gray-600" />
+                      </div>
+                      <div className="ml-4">
+                        <h3 className="font-medium">Shipping</h3>
+                        <p className="text-sm text-gray-500">Your order will be shipped within 1-2 business days.</p>
+                      </div>
+                    </div>
+                    
+                    <div className="relative flex">
+                      <div className="flex items-center justify-center w-8 h-8 bg-gray-200 rounded-full shrink-0 z-10">
+                        <Calendar className="h-4 w-4 text-gray-600" />
+                      </div>
+                      <div className="ml-4">
+                        <h3 className="font-medium">Estimated Delivery</h3>
+                        <p className="text-sm text-gray-500">
+                          {estimatedDelivery.toLocaleDateString(undefined, { 
+                            weekday: 'long', 
+                            month: 'long', 
+                            day: 'numeric' 
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Button 
+                    onClick={() => navigate('/products')}
+                    className="bg-cherry hover:bg-cherry/90 text-white"
+                  >
+                    Continue Shopping
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    className="border-cherry text-cherry hover:bg-cherry/10"
+                    onClick={() => navigate('/')}
+                  >
+                    Back to Home
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         
-        <div className="border-t border-b py-4 my-6">
-          <div className="flex justify-between mb-2">
-            <span className="font-semibold">Order Number:</span>
-            <span className="text-gray-700">{order.id.substring(0, 8).toUpperCase()}</span>
-          </div>
-          <div className="flex justify-between mb-2">
-            <span className="font-semibold">Date:</span>
-            <span className="text-gray-700">{orderDate}</span>
-          </div>
-          <div className="flex justify-between mb-2">
-            <span className="font-semibold">Status:</span>
-            <span className="text-gray-700 capitalize">{order.status}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="font-semibold">Total:</span>
-            <span className="text-gray-700">${order.total_amount.toFixed(2)}</span>
-          </div>
-        </div>
-        
-        <div className="mb-6">
-          <h2 className="font-bold text-lg mb-3">Shipping Information</h2>
-          <div className="text-gray-700">
-            <p>{order.shipping_address.firstName} {order.shipping_address.lastName}</p>
-            <p>{order.shipping_address.address}</p>
-            <p>{order.shipping_address.city}, {order.shipping_address.state} {order.shipping_address.zipCode}</p>
-            <p>{order.shipping_address.email}</p>
-            <p>{order.shipping_address.phone}</p>
-          </div>
-        </div>
-        
-        <div className="text-center mt-8">
-          <p className="text-gray-600 mb-4">We've sent a confirmation email to {order.shipping_address.email}</p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button onClick={() => navigate('/products')}>
-              Continue Shopping
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/account/orders')}>
-              View All Orders
-            </Button>
-          </div>
-        </div>
-      </div>
+        <Newsletter />
+      </main>
+      
+      <Footer />
     </div>
   );
 };
