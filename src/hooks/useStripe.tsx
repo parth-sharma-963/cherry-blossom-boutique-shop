@@ -21,7 +21,7 @@ declare global {
 
 // This hook handles Stripe payment integration
 export const useStripe = () => {
-  const STRIPE_PUBLISHABLE_KEY = 'pk_test_51RAxUwQ4859M5SqJ';
+  const STRIPE_PUBLISHABLE_KEY = 'pk_test_51RAxUwQ4859M5SqJjAiumjk8W5o62UhEcq4zEFbkKkXc5B2tqIStjOlNTvl5geHTQxTcHpCtlGDOd0gDi5xWvwPy00z5R8Y0Wo';
   
   // Add Stripe script to the document
   const loadStripeScript = useCallback(() => {
