@@ -23,7 +23,7 @@ declare global {
 export const useStripe = () => {
   // Add Stripe script to the document
   const loadStripeScript = useCallback(() => {
-    return new Promise<boolean>((resolve) => {
+    return new Promise<boolean>((resolve, reject) => {
       if (window.Stripe) {
         resolve(true);
         return;
@@ -38,7 +38,7 @@ export const useStripe = () => {
       };
       document.body.appendChild(script);
     });
-  });
+  }, []);
 
   // Initialize payment
   const initPayment = useCallback(async (options: PaymentOptions) => {
@@ -79,7 +79,7 @@ export const useStripe = () => {
       });
       return false;
     }
-  }, []);
+  }, [loadStripeScript]);
 
   return { initPayment };
 };
