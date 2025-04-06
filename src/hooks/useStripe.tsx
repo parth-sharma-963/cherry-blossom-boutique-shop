@@ -21,6 +21,8 @@ declare global {
 
 // This hook handles Stripe payment integration
 export const useStripe = () => {
+  const STRIPE_PUBLISHABLE_KEY = 'pk_test_51RAxUwQ4859M5SqJ';
+  
   // Add Stripe script to the document
   const loadStripeScript = useCallback(() => {
     return new Promise<boolean>((resolve, reject) => {
@@ -34,7 +36,7 @@ export const useStripe = () => {
       script.onload = () => resolve(true);
       script.onerror = () => {
         console.error("Stripe script failed to load");
-        resolve(false);
+        reject(false);
       };
       document.body.appendChild(script);
     });
@@ -54,8 +56,26 @@ export const useStripe = () => {
         return false;
       }
       
-      // Redirect to Stripe OAuth flow
-      const stripeOAuthUrl = 'https://connect.stripe.com/oauth/authorize?redirect_uri=https://connect.stripe.com/hosted/oauth&client_id=ca_S56WMSIRv0ouWSvWKVwSTUbvsr16LDfY&state=onbrd_S56XyjvrJzUHmipKlxlxC4JJts&response_type=code&scope=read_write&stripe_user[country]=US';
+      // Initialize Stripe with the publishable key
+      const stripe = window.Stripe(STRIPE_PUBLISHABLE_KEY);
+      
+      // Create a payment session
+      const session = {
+        amount: options.amount * 100, // Convert to cents for Stripe
+        currency: options.currency || 'usd',
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            name: options.name,
+            amount: options.amount * 100,
+            currency: options.currency || 'usd',
+            quantity: 1,
+          },
+        ],
+        client_reference_id: options.orderId,
+        customer_email: options.email,
+        metadata: options.notes,
+      };
       
       // Create temporary data in localStorage to remember cart items
       localStorage.setItem('pendingPayment', JSON.stringify({
@@ -66,8 +86,33 @@ export const useStripe = () => {
         notes: options.notes
       }));
       
-      // Redirect to Stripe OAuth page
-      window.location.href = stripeOAuthUrl;
+      // Open Stripe Checkout
+      const result = await stripe.redirectToCheckout({
+        lineItems: [{
+          price_data: {
+            currency: options.currency || 'usd',
+            product_data: {
+              name: options.name,
+              description: options.description || '',
+            },
+            unit_amount: Math.round(options.amount * 100), // Convert to cents
+          },
+          quantity: 1,
+        }],
+        mode: 'payment',
+        successUrl: `${window.location.origin}/checkout?success=true`,
+        cancelUrl: `${window.location.origin}/checkout?canceled=true`,
+      });
+      
+      if (result.error) {
+        console.error("Stripe checkout error:", result.error);
+        toast({
+          title: "Payment Failed",
+          description: result.error.message || "An error occurred during checkout",
+          variant: "destructive",
+        });
+        return false;
+      }
       
       return true;
     } catch (error) {

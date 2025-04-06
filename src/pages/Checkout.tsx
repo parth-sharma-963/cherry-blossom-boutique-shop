@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
@@ -6,12 +5,14 @@ import { useStripe } from '@/hooks/useStripe';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const Checkout = () => {
   const { cartItems, totalPrice, clearCart } = useCart();
   const { initPayment } = useStripe();
   const navigate = useNavigate();
+  const location = useLocation();
+  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -22,26 +23,39 @@ const Checkout = () => {
     zipCode: '',
   });
 
-  // Check for OAuth callback
+  // Check for success or canceled query parameters
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
+    const queryParams = new URLSearchParams(location.search);
+    const success = queryParams.get('success');
+    const canceled = queryParams.get('canceled');
     
-    if (code) {
-      // Handle OAuth callback
-      const pendingPayment = localStorage.getItem('pendingPayment');
-      if (pendingPayment) {
-        toast({
-          title: "Payment Authorized",
-          description: "Your Stripe account has been connected successfully.",
-        });
-        localStorage.removeItem('pendingPayment');
-        // In a real implementation, you would process the payment here
-        clearCart();
+    if (success === 'true') {
+      // Handle successful payment
+      toast({
+        title: "Payment Successful",
+        description: "Thank you for your purchase!",
+      });
+      clearCart();
+      
+      // Clear query parameters
+      navigate('/checkout', { replace: true });
+      
+      // Redirect to home after a brief delay
+      setTimeout(() => {
         navigate('/');
-      }
+      }, 2000);
+    } else if (canceled === 'true') {
+      // Handle canceled payment
+      toast({
+        title: "Payment Canceled",
+        description: "Your payment was canceled. Your cart items are still saved.",
+        variant: "destructive",
+      });
+      
+      // Clear query parameters
+      navigate('/checkout', { replace: true });
     }
-  }, [clearCart, navigate]);
+  }, [location.search, clearCart, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -80,7 +94,7 @@ const Checkout = () => {
     });
 
     if (success) {
-      // Payment process initiated, will be handled by OAuth redirect
+      // Payment process initiated
       console.log("Payment process initiated");
     }
   };
