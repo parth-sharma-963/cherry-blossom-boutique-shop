@@ -30,15 +30,19 @@ export const useRazorpay = () => {
       setIsSubmitting(true);
       setProcessingPayment(true);
       
+      console.log("Creating payment session for order:", orderInfo);
+      
       // Create payment session with Razorpay
       const response = await supabase.functions.invoke('create-payment', {
         body: { orderInfo },
       });
       
       if (response.error) {
+        console.error("Payment session error:", response.error);
         throw new Error(response.error.message || 'Failed to create payment session');
       }
       
+      console.log("Payment session created successfully:", response.data);
       return response.data;
     } catch (error) {
       console.error('Payment error:', error);
@@ -57,6 +61,8 @@ export const useRazorpay = () => {
       return;
     }
     
+    console.log("Initializing Razorpay payment with order data:", orderData);
+    
     const options = {
       key: orderData.keyId,
       amount: orderData.amount,
@@ -65,6 +71,8 @@ export const useRazorpay = () => {
       description: "Purchase of fashion items",
       order_id: orderData.orderId,
       handler: function(response: any) {
+        console.log("Payment successful, response:", response);
+        
         // Store combined order info in session storage for retrieval after payment
         const fullOrderInfo = {
           ...orderData.orderInfo,
@@ -88,6 +96,7 @@ export const useRazorpay = () => {
       },
       modal: {
         ondismiss: function() {
+          console.log("Payment modal dismissed");
           setIsSubmitting(false);
           setProcessingPayment(false);
           toast.error("Payment cancelled. Please try again.");
@@ -95,8 +104,15 @@ export const useRazorpay = () => {
       },
     };
     
-    const razorpayInstance = new window.Razorpay(options);
-    razorpayInstance.open();
+    try {
+      const razorpayInstance = new window.Razorpay(options);
+      razorpayInstance.open();
+    } catch (error) {
+      console.error("Error opening Razorpay:", error);
+      toast.error("Failed to open payment window. Please try again.");
+      setIsSubmitting(false);
+      setProcessingPayment(false);
+    }
   };
 
   return {

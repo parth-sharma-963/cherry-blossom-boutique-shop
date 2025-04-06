@@ -15,15 +15,25 @@ serve(async (req) => {
   try {
     const { orderInfo } = await req.json();
     
-    // Create Razorpay order
-    const razorpayKey = Deno.env.get("RAZORPAY_KEY_ID") || "";
-    const razorpaySecret = Deno.env.get("RAZORPAY_KEY_SECRET") || "";
+    // Get Razorpay API keys from environment variables
+    // IMPORTANT: You need to add these keys in the Supabase Edge Function settings
+    // Go to Supabase Dashboard > Edge Functions > Settings > Environment variables
+    // Add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET
+    const razorpayKey = Deno.env.get("RAZORPAY_KEY_ID");
+    const razorpaySecret = Deno.env.get("RAZORPAY_KEY_SECRET");
+    
+    if (!razorpayKey || !razorpaySecret) {
+      console.error("Razorpay API keys not found in environment variables");
+      throw new Error("Razorpay API keys are not configured. Please add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to your Edge Function environment variables.");
+    }
     
     // Create authorization header for Razorpay API
     const auth = btoa(`${razorpayKey}:${razorpaySecret}`);
     
     // Calculate amount in smallest currency unit (paise for INR)
     const amountInPaise = Math.round(orderInfo.total * 100);
+    
+    console.log("Creating Razorpay order with amount:", amountInPaise);
     
     // Create a Razorpay order
     const orderResponse = await fetch("https://api.razorpay.com/v1/orders", {
@@ -45,10 +55,12 @@ serve(async (req) => {
     
     if (!orderResponse.ok) {
       const errorData = await orderResponse.json();
+      console.error("Razorpay API error:", errorData);
       throw new Error(`Failed to create Razorpay order: ${JSON.stringify(errorData)}`);
     }
     
     const razorpayOrder = await orderResponse.json();
+    console.log("Razorpay order created successfully:", razorpayOrder.id);
     
     // Store order info in session storage for retrieval after payment
     const responseData = {
