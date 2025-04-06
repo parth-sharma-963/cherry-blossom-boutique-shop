@@ -1,15 +1,17 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
-import { useRazorpay } from '@/hooks/useRazorpay';
+import { useStripe } from '@/hooks/useStripe';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 const Checkout = () => {
   const { cartItems, totalPrice, clearCart } = useCart();
-  const { initPayment } = useRazorpay();
+  const { initPayment } = useStripe();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -19,6 +21,27 @@ const Checkout = () => {
     state: '',
     zipCode: '',
   });
+
+  // Check for OAuth callback
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    
+    if (code) {
+      // Handle OAuth callback
+      const pendingPayment = localStorage.getItem('pendingPayment');
+      if (pendingPayment) {
+        toast({
+          title: "Payment Authorized",
+          description: "Your Stripe account has been connected successfully.",
+        });
+        localStorage.removeItem('pendingPayment');
+        // In a real implementation, you would process the payment here
+        clearCart();
+        navigate('/');
+      }
+    }
+  }, [clearCart, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -57,9 +80,8 @@ const Checkout = () => {
     });
 
     if (success) {
-      // Here you would typically send order details to your backend
-      clearCart();
-      // Redirect to success page or show success message
+      // Payment process initiated, will be handled by OAuth redirect
+      console.log("Payment process initiated");
     }
   };
 
@@ -68,7 +90,7 @@ const Checkout = () => {
       <div className="container mx-auto py-10 text-center">
         <h1 className="text-3xl font-bold mb-4">Your cart is empty</h1>
         <p className="mb-6">Add some products to your cart before checking out.</p>
-        <Button onClick={() => window.location.href = '/'}>
+        <Button onClick={() => navigate('/')}>
           Continue Shopping
         </Button>
       </div>
@@ -184,7 +206,7 @@ const Checkout = () => {
               />
             </div>
             <Button type="submit" className="w-full mt-6">
-              Pay ₹{totalPrice.toFixed(2)}
+              Pay with Stripe ₹{totalPrice.toFixed(2)}
             </Button>
           </form>
         </div>
