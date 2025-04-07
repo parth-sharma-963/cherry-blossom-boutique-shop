@@ -1,119 +1,164 @@
 
-import { Product } from '@/types/Product';
+export type Product = {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+  category: string;
+  featured: boolean;
+  inStock: boolean;
+  discount?: number;
+  sizes?: string[];
+  colors?: string[];
+};
 
-// Products data organized by category
+export type Category = {
+  id: number;
+  name: string;
+  image: string;
+  productCount: number;
+};
+
 export const products: Product[] = [
-  // Men's Category
   {
-    id: 'm1',
-    name: 'Classic Fit Shirt',
-    price: 1299,
-    category: 'men',
-    description: 'A comfortable classic fit shirt for everyday wear.',
-    image: '/images/products/men-shirt-1.jpg',
-    sizes: ['S', 'M', 'L', 'XL'],
-    colors: ['White', 'Blue', 'Black'],
+    id: 1,
+    name: "Cherry Blossom Sundress",
+    description: "A beautiful floral sundress with cherry blossom pattern, perfect for spring and summer days.",
+    price: 59.99,
+    image: "/placeholder.svg",
+    category: "Women's Clothing",
+    featured: true,
     inStock: true,
+    discount: 10,
+    sizes: ["XS", "S", "M", "L", "XL"],
+    colors: ["Pink", "White", "Light Blue"]
   },
   {
-    id: 'm2',
-    name: 'Slim Fit Jeans',
-    price: 1499,
-    category: 'men',
-    description: 'Comfortable slim fit jeans perfect for casual occasions.',
-    image: '/images/products/men-jeans-1.jpg',
-    sizes: ['30', '32', '34', '36'],
-    colors: ['Blue', 'Black'],
+    id: 2,
+    name: "Classic Men's Blazer",
+    description: "A sophisticated blazer for men that works well for both formal occasions and casual outings.",
+    price: 129.99,
+    image: "/placeholder.svg",
+    category: "Men's Clothing",
+    featured: true,
     inStock: true,
+    sizes: ["S", "M", "L", "XL", "XXL"],
+    colors: ["Navy", "Black", "Gray"]
   },
   {
-    id: 'm3',
-    name: 'Sport Running Shoes',
-    price: 2499,
-    category: 'men',
-    description: 'Lightweight running shoes with excellent cushioning.',
-    image: '/images/products/men-shoes-1.jpg',
-    sizes: ['7', '8', '9', '10', '11'],
-    colors: ['Black/White', 'Blue/Gray'],
+    id: 3,
+    name: "Kids' Cherry Print T-shirt",
+    description: "A cute and comfortable t-shirt for kids featuring a playful cherry print design.",
+    price: 24.99,
+    image: "/placeholder.svg",
+    category: "Kids' Clothing",
+    featured: false,
     inStock: true,
-  },
-  
-  // Women's Category
-  {
-    id: 'w1',
-    name: 'Summer Floral Dress',
-    price: 1699,
-    category: 'women',
-    description: 'A beautiful floral dress perfect for summer days.',
-    image: '/images/products/women-dress-1.jpg',
-    sizes: ['XS', 'S', 'M', 'L'],
-    colors: ['Floral Pink', 'Floral Blue'],
-    inStock: true,
+    sizes: ["3T", "4T", "5T", "6T"],
+    colors: ["Red", "White"]
   },
   {
-    id: 'w2',
-    name: 'High-Waist Leggings',
-    price: 999,
-    category: 'women',
-    description: 'Comfortable high-waist leggings for workouts or casual wear.',
-    image: '/images/products/women-leggings-1.jpg',
-    sizes: ['XS', 'S', 'M', 'L'],
-    colors: ['Black', 'Navy', 'Gray'],
+    id: 4,
+    name: "Elegant Silk Tie",
+    description: "A premium silk tie with subtle pattern, adding sophistication to any formal outfit.",
+    price: 45.99,
+    image: "/placeholder.svg",
+    category: "Ties",
+    featured: false,
     inStock: true,
+    colors: ["Burgundy", "Navy", "Forest Green"]
   },
   {
-    id: 'w3',
-    name: 'Elegant Handbag',
-    price: 1899,
-    category: 'women',
-    description: 'An elegant handbag to complement any outfit.',
-    image: '/images/products/women-bag-1.jpg',
-    colors: ['Brown', 'Black', 'Tan'],
+    id: 5,
+    name: "Luxe Leather Shoes",
+    description: "Handcrafted leather shoes that combine style, comfort, and durability for everyday wear.",
+    price: 159.99,
+    image: "/placeholder.svg",
+    category: "Shoes",
+    featured: true,
     inStock: true,
-  },
-  
-  // Kids' Category
-  {
-    id: 'k1',
-    name: 'Cartoon Print T-shirt',
-    price: 599,
-    category: 'kids',
-    description: 'Fun cartoon print t-shirt for kids.',
-    image: '/images/products/kids-tshirt-1.jpg',
-    sizes: ['2T', '3T', '4T', '5T'],
-    colors: ['Blue', 'Red', 'Yellow'],
-    inStock: true,
+    discount: 15,
+    sizes: ["7", "8", "9", "10", "11", "12"],
+    colors: ["Brown", "Black"]
   },
   {
-    id: 'k2',
-    name: 'Kids Denim Shorts',
-    price: 699,
-    category: 'kids',
-    description: 'Comfortable denim shorts for active kids.',
-    image: '/images/products/kids-shorts-1.jpg',
-    sizes: ['2T', '3T', '4T', '5T'],
-    colors: ['Blue', 'Light Blue'],
+    id: 6,
+    name: "Pearl Cherry Earrings",
+    description: "Delicate cherry-shaped earrings with pearl accents, a perfect accessory for any occasion.",
+    price: 34.99,
+    image: "/placeholder.svg",
+    category: "Accessories",
+    featured: true,
     inStock: true,
+    colors: ["Silver/Pearl", "Gold/Pearl"]
   },
   {
-    id: 'k3',
-    name: 'Kids Sneakers',
-    price: 899,
-    category: 'kids',
-    description: 'Lightweight and comfortable sneakers for active kids.',
-    image: '/images/products/kids-shoes-1.jpg',
-    sizes: ['5', '6', '7', '8', '9'],
-    colors: ['Blue/Orange', 'Red/Black'],
+    id: 7,
+    name: "Women's Denim Jacket",
+    description: "A versatile denim jacket that adds a cool, casual layer to any outfit throughout the seasons.",
+    price: 79.99,
+    image: "/placeholder.svg",
+    category: "Women's Clothing",
+    featured: false,
     inStock: true,
+    sizes: ["XS", "S", "M", "L", "XL"],
+    colors: ["Light Wash", "Medium Wash", "Dark Wash"]
+  },
+  {
+    id: 8,
+    name: "Men's Casual Chinos",
+    description: "Comfortable and stylish chinos that work well for both office and weekend wear.",
+    price: 69.99,
+    image: "/placeholder.svg",
+    category: "Men's Clothing",
+    featured: false,
+    inStock: true,
+    discount: 5,
+    sizes: ["28", "30", "32", "34", "36", "38", "40"],
+    colors: ["Khaki", "Navy", "Olive", "Gray"]
+  },
+];
+
+export const categories: Category[] = [
+  {
+    id: 1,
+    name: "Women's Clothing",
+    image: "/placeholder.svg",
+    productCount: 24
+  },
+  {
+    id: 2,
+    name: "Men's Clothing",
+    image: "/placeholder.svg",
+    productCount: 18
+  },
+  {
+    id: 3,
+    name: "Kids' Clothing",
+    image: "/placeholder.svg",
+    productCount: 15
+  },
+  {
+    id: 4,
+    name: "Shoes",
+    image: "/placeholder.svg",
+    productCount: 12
+  },
+  {
+    id: 5,
+    name: "Ties",
+    image: "/placeholder.svg",
+    productCount: 8
+  },
+  {
+    id: 6,
+    name: "Accessories",
+    image: "/placeholder.svg",
+    productCount: 20
   }
 ];
 
-// Helper function to get products by category
-export const getProductsByCategory = (category: 'men' | 'women' | 'kids'): Product[] => {
-  return products.filter(product => product.category === category);
-};
-
-// Helper function to get a product by ID
-export const getProductById = (id: string): Product | undefined => {
-  return products.find(product => product.id === id);
-};
+export const getFeaturedProducts = () => products.filter(product => product.featured);
+export const getProductsByCategory = (category: string) => products.filter(product => product.category === category);
+export const getProductById = (id: number) => products.find(product => product.id === id);

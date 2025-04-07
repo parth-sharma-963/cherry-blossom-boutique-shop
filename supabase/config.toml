@@ -1,0 +1,5 @@
+
+project_id = "dummy-project-id"
+
+[functions.create-payment]
+verify_jwt = false
