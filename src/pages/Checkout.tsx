@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
@@ -6,12 +7,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 const Checkout = () => {
   const { cartItems, totalPrice, clearCart } = useCart();
   const { initPayment } = useStripe();
   const navigate = useNavigate();
   const location = useLocation();
+  const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
+  const [isCanceledDialogOpen, setIsCanceledDialogOpen] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -31,26 +35,14 @@ const Checkout = () => {
     
     if (success === 'true') {
       // Handle successful payment
-      toast({
-        title: "Payment Successful",
-        description: "Thank you for your purchase!",
-      });
+      setIsSuccessDialogOpen(true);
       clearCart();
       
       // Clear query parameters
       navigate('/checkout', { replace: true });
-      
-      // Redirect to home after a brief delay
-      setTimeout(() => {
-        navigate('/');
-      }, 2000);
     } else if (canceled === 'true') {
       // Handle canceled payment
-      toast({
-        title: "Payment Canceled",
-        description: "Your payment was canceled. Your cart items are still saved.",
-        variant: "destructive",
-      });
+      setIsCanceledDialogOpen(true);
       
       // Clear query parameters
       navigate('/checkout', { replace: true });
@@ -76,14 +68,18 @@ const Checkout = () => {
     }
 
     // Start payment process
-    const success = await initPayment({
+    await initPayment({
       amount: totalPrice,
-      name: "Your Fashion Store",
+      currency: 'inr',
+      name: "Your Fashion Store Order",
       description: `Payment for ${cartItems.length} items`,
       email: formData.email,
       contact: formData.phone,
       notes: {
         address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        zipCode: formData.zipCode,
         order_items: JSON.stringify(cartItems.map(item => ({
           id: item.id,
           name: item.name,
@@ -92,11 +88,6 @@ const Checkout = () => {
         })))
       }
     });
-
-    if (success) {
-      // Payment process initiated
-      console.log("Payment process initiated");
-    }
   };
 
   if (cartItems.length === 0) {
@@ -225,6 +216,40 @@ const Checkout = () => {
           </form>
         </div>
       </div>
+
+      {/* Success Dialog */}
+      <AlertDialog open={isSuccessDialogOpen} onOpenChange={setIsSuccessDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Payment Successful</AlertDialogTitle>
+            <AlertDialogDescription>
+              Thank you for your purchase! Your order has been placed successfully.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => navigate('/')}>
+              Continue Shopping
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Canceled Dialog */}
+      <AlertDialog open={isCanceledDialogOpen} onOpenChange={setIsCanceledDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Payment Canceled</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your payment was canceled. Your cart items are still saved.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setIsCanceledDialogOpen(false)}>
+              Try Again
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

@@ -59,25 +59,7 @@ export const useStripe = () => {
       // Initialize Stripe with the publishable key
       const stripe = window.Stripe(STRIPE_PUBLISHABLE_KEY);
       
-      // Create a payment session
-      const session = {
-        amount: options.amount * 100, // Convert to cents for Stripe
-        currency: options.currency || 'usd',
-        payment_method_types: ['card'],
-        line_items: [
-          {
-            name: options.name,
-            amount: options.amount * 100,
-            currency: options.currency || 'usd',
-            quantity: 1,
-          },
-        ],
-        client_reference_id: options.orderId,
-        customer_email: options.email,
-        metadata: options.notes,
-      };
-      
-      // Create temporary data in localStorage to remember cart items
+      // Save order details in localStorage for retrieval after payment
       localStorage.setItem('pendingPayment', JSON.stringify({
         amount: options.amount,
         description: options.description,
@@ -90,12 +72,12 @@ export const useStripe = () => {
       const result = await stripe.redirectToCheckout({
         lineItems: [{
           price_data: {
-            currency: options.currency || 'usd',
+            currency: options.currency || 'inr',
             product_data: {
               name: options.name,
               description: options.description || '',
             },
-            unit_amount: Math.round(options.amount * 100), // Convert to cents
+            unit_amount: Math.round(options.amount * 100), // Convert to smallest currency unit
           },
           quantity: 1,
         }],
