@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -22,6 +22,7 @@ import { Bubbles } from '@/components/ui/bubbles';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
+import stripePromise from '@/utils/stripe';
 
 // Define the schema for the checkout form
 const checkoutSchema = z.object({
@@ -41,7 +42,6 @@ type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 const Checkout = () => {
   const { cartItems, cartTotal, clearCart } = useCart();
   const navigate = useNavigate();
-  const location = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
   
@@ -86,7 +86,16 @@ const Checkout = () => {
       
       setProcessingPayment(true);
       
-      // Create payment session with Stripe
+      // Store order info in session storage for retrieval after payment
+      sessionStorage.setItem('orderInfo', JSON.stringify(orderInfo));
+      
+      // Initialize Stripe checkout directly from client side
+      const stripe = await stripePromise;
+      if (!stripe) {
+        throw new Error("Failed to load Stripe");
+      }
+      
+      // Create a checkout session using our Supabase Edge Function
       const response = await supabase.functions.invoke('create-payment', {
         body: { orderInfo },
       });
@@ -95,11 +104,12 @@ const Checkout = () => {
         throw new Error(response.error.message || 'Failed to create payment session');
       }
       
-      // Store order info in session storage for retrieval after payment
-      sessionStorage.setItem('orderInfo', JSON.stringify(orderInfo));
-      
       // Redirect to Stripe checkout
-      window.location.href = response.data.url;
+      if (response.data.url) {
+        window.location.href = response.data.url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
       
     } catch (error) {
       console.error('Payment error:', error);
