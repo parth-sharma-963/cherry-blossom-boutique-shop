@@ -33,7 +33,7 @@ serve(async (req) => {
         currency: "usd",
         product_data: {
           name: item.product.name,
-          // Remove the images array to avoid URL validation errors
+          // No images used at all to avoid any URL validation
         },
         unit_amount: Math.round(item.product.price * 100), // Convert to cents
       },
