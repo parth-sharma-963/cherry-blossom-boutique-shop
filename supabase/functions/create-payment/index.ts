@@ -15,9 +15,15 @@ serve(async (req) => {
 
   try {
     const { orderInfo } = await req.json();
+    console.log("Order info received:", JSON.stringify(orderInfo));
     
     // Initialize Stripe
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+    const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeSecretKey) {
+      throw new Error("STRIPE_SECRET_KEY is not set in environment variables");
+    }
+    
+    const stripe = new Stripe(stripeSecretKey, {
       apiVersion: "2022-11-15",
     });
 
@@ -77,6 +83,8 @@ serve(async (req) => {
         orderNumber: orderInfo.orderNumber,
       }
     });
+
+    console.log("Stripe session created:", session.id);
 
     // Return the session ID and URL to the client
     return new Response(

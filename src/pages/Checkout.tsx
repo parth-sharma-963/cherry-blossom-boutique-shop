@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
@@ -81,7 +80,7 @@ const Checkout = () => {
         items: cartItems,
         total: cartTotal,
         orderNumber,
-        orderDate: new Date(),
+        orderDate: new Date().toISOString(),
       };
       
       setProcessingPayment(true);
@@ -89,24 +88,21 @@ const Checkout = () => {
       // Store order info in session storage for retrieval after payment
       sessionStorage.setItem('orderInfo', JSON.stringify(orderInfo));
       
-      // Initialize Stripe checkout directly from client side
-      const stripe = await stripePromise;
-      if (!stripe) {
-        throw new Error("Failed to load Stripe");
-      }
+      console.log("Invoking create-payment function with order info:", orderInfo);
       
       // Create a checkout session using our Supabase Edge Function
-      const response = await supabase.functions.invoke('create-payment', {
+      const { data: response, error } = await supabase.functions.invoke('create-payment', {
         body: { orderInfo },
       });
-      
-      if (response.error) {
-        throw new Error(response.error.message || 'Failed to create payment session');
+
+      if (error) {
+        console.error("Function invocation error:", error);
+        throw new Error(error.message || 'Failed to create payment session');
       }
       
       // Redirect to Stripe checkout
-      if (response.data.url) {
-        window.location.href = response.data.url;
+      if (response?.url) {
+        window.location.href = response.url;
       } else {
         throw new Error('No checkout URL returned');
       }
