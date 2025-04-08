@@ -26,7 +26,7 @@ export const products: Product[] = [
     name: "Cherry Blossom Sundress",
     description: "A beautiful floral sundress with cherry blossom pattern, perfect for spring and summer days.",
     price: 59.99,
-    image: "/placeholder.svg",
+    image: "/images/products/fa41816be1743b41dd0440388e44536a.jpg",
     category: "Women's Clothing",
     featured: true,
     inStock: true,
