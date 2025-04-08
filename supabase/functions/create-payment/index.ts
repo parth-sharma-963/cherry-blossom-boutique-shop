@@ -33,7 +33,7 @@ serve(async (req) => {
         currency: "usd",
         product_data: {
           name: item.product.name,
-          // Removed images to avoid URL validation issues
+          // No images to avoid URL validation issues
         },
         unit_amount: Math.round(item.product.price * 100), // Convert to cents
       },
@@ -45,8 +45,8 @@ serve(async (req) => {
       payment_method_types: ["card"],
       line_items: lineItems,
       mode: "payment",
-      success_url: `${req.headers.get("origin")}/order-confirmation?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get("origin")}/checkout`,
+      success_url: `${req.headers.get("origin") || "https://your-site.com"}/order-confirmation?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${req.headers.get("origin") || "https://your-site.com"}/checkout`,
       customer_email: orderInfo.email,
       shipping_address_collection: {
         allowed_countries: ["US"],
@@ -79,10 +79,14 @@ serve(async (req) => {
     });
 
     console.log("Stripe session created successfully:", session.id);
+    console.log("Checkout URL:", session.url);
 
     // Return the session ID and URL to the client
     return new Response(
-      JSON.stringify({ sessionId: session.id, url: session.url }),
+      JSON.stringify({ 
+        sessionId: session.id, 
+        url: session.url 
+      }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -91,7 +95,10 @@ serve(async (req) => {
   } catch (error) {
     console.error("Error creating payment:", error);
     return new Response(
-      JSON.stringify({ error: error.message, details: error }),
+      JSON.stringify({ 
+        error: error.message, 
+        details: error 
+      }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,

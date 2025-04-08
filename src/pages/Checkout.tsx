@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
@@ -21,8 +20,7 @@ import {
 import { Bubbles } from '@/components/ui/bubbles';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, AlertCircle } from 'lucide-react';
-import stripePromise from '@/utils/stripe';
+import { Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 
 // Define the schema for the checkout form
 const checkoutSchema = z.object({
@@ -45,6 +43,7 @@ const Checkout = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [checkoutAttempts, setCheckoutAttempts] = useState(0);
   
   // Redirect to cart if cart is empty
   useEffect(() => {
@@ -74,6 +73,7 @@ const Checkout = () => {
       setIsSubmitting(true);
       setProcessingPayment(true);
       setPaymentError(null);
+      setCheckoutAttempts(prev => prev + 1);
       
       // Generate order number
       const orderNumber = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
@@ -102,13 +102,21 @@ const Checkout = () => {
         throw new Error(error.message || 'Failed to create payment session');
       }
       
-      // Redirect to Stripe checkout
-      if (response?.url) {
-        console.log("Redirecting to Stripe checkout:", response.url);
-        window.location.href = response.url;
-      } else {
+      if (!response || !response.url) {
+        console.error("Missing URL in response:", response);
         throw new Error('No checkout URL returned from payment processor');
       }
+      
+      // Redirect to Stripe checkout
+      console.log("Redirecting to Stripe checkout:", response.url);
+      window.location.href = response.url;
+      
+      // Set a timeout as a fallback in case redirect doesn't happen
+      setTimeout(() => {
+        setProcessingPayment(false);
+        setIsSubmitting(false);
+        toast.error("Redirect to payment page failed. Please try again.");
+      }, 5000);
       
     } catch (error) {
       console.error('Payment error:', error);
@@ -123,6 +131,13 @@ const Checkout = () => {
       setProcessingPayment(false);
       setIsSubmitting(false);
     }
+  };
+  
+  // Allow retry after error
+  const handleRetry = () => {
+    setPaymentError(null);
+    setIsSubmitting(false);
+    setProcessingPayment(false);
   };
   
   if (cartItems.length === 0) {
@@ -154,6 +169,14 @@ const Checkout = () => {
                     <div>
                       <p className="font-medium text-red-800">Payment Error</p>
                       <p className="text-sm text-red-700">{paymentError}</p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="mt-2" 
+                        onClick={handleRetry}
+                      >
+                        Try Again
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -319,6 +342,20 @@ const Checkout = () => {
                         )}
                       </Button>
                     </div>
+                    
+                    {checkoutAttempts > 1 && (
+                      <div className="mt-4 p-3 bg-yellow-50 border border-yellow-100 rounded-md text-sm text-yellow-700">
+                        <p className="font-medium">Having trouble?</p>
+                        <p>If you're experiencing issues with the checkout process, please try:</p>
+                        <ul className="list-disc pl-5 mt-1">
+                          <li>Refreshing the page and trying again</li>
+                          <li>Using a different browser</li>
+                          <li>Ensuring your card information is correct</li>
+                          <li>Contacting support if the issue persists</li>
+                          <li>Contacting support if the issue persists</li>
+                        </ul>
+                      </div>
+                    )}
                   </form>
                 </Form>
               </div>
