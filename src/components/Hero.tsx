@@ -37,7 +37,7 @@ const Hero = () => {
               {/* Main product image - using placeholder for now */}
               <div className="w-72 h-96 md:w-80 md:h-[28rem] bg-white rounded-lg shadow-lg overflow-hidden animate-fade-in">
                 <img 
-                  src="/placeholder.svg" 
+                  src="/images/bbg-cherry-blossom-esplanade-kanzan-alison-engstrom-733x1098.jpg"
                   alt="Spring Collection Featured Item" 
                   className="w-full h-full object-cover"
                 />
