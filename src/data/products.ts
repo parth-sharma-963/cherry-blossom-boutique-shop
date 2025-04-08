@@ -110,7 +110,7 @@ export const products: Product[] = [
     name: "Men's Casual Chinos",
     description: "Comfortable and stylish chinos that work well for both office and weekend wear.",
     price: 69.99,
-    image: "/images/mens_casual_chinos.jpg",
+    image: "/images/men_casual_chinos.jpg",
     category: "Men's Clothing",
     featured: false,
     inStock: true,
