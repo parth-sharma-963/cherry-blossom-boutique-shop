@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
@@ -20,7 +21,7 @@ import {
 import { Bubbles } from '@/components/ui/bubbles';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 import stripePromise from '@/utils/stripe';
 
 // Define the schema for the checkout form
@@ -43,6 +44,7 @@ const Checkout = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
   
   // Redirect to cart if cart is empty
   useEffect(() => {
@@ -70,6 +72,8 @@ const Checkout = () => {
   const onSubmit = async (data: CheckoutFormValues) => {
     try {
       setIsSubmitting(true);
+      setProcessingPayment(true);
+      setPaymentError(null);
       
       // Generate order number
       const orderNumber = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
@@ -83,12 +87,10 @@ const Checkout = () => {
         orderDate: new Date().toISOString(),
       };
       
-      setProcessingPayment(true);
-      
       // Store order info in session storage for retrieval after payment
       sessionStorage.setItem('orderInfo', JSON.stringify(orderInfo));
       
-      console.log("Invoking create-payment function with order info:", orderInfo);
+      console.log("Invoking create-payment function with order info");
       
       // Create a checkout session using our Supabase Edge Function
       const { data: response, error } = await supabase.functions.invoke('create-payment', {
@@ -102,16 +104,24 @@ const Checkout = () => {
       
       // Redirect to Stripe checkout
       if (response?.url) {
+        console.log("Redirecting to Stripe checkout:", response.url);
         window.location.href = response.url;
       } else {
-        throw new Error('No checkout URL returned');
+        throw new Error('No checkout URL returned from payment processor');
       }
       
     } catch (error) {
       console.error('Payment error:', error);
-      toast.error("Payment processing failed. Please try again.");
-      setIsSubmitting(false);
+      let errorMessage = 'Payment processing failed. Please try again.';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      setPaymentError(errorMessage);
+      toast.error(errorMessage);
       setProcessingPayment(false);
+      setIsSubmitting(false);
     }
   };
   
@@ -137,6 +147,16 @@ const Checkout = () => {
             <div className="lg:col-span-2">
               <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
                 <h2 className="text-xl font-semibold mb-6">Shipping Information</h2>
+                
+                {paymentError && (
+                  <div className="mb-6 p-4 border border-red-200 bg-red-50 rounded-md flex items-start">
+                    <AlertCircle className="text-red-500 mr-3 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-red-800">Payment Error</p>
+                      <p className="text-sm text-red-700">{paymentError}</p>
+                    </div>
+                  </div>
+                )}
                 
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -287,10 +307,13 @@ const Checkout = () => {
                         {processingPayment ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Processing...
+                            Processing Payment...
                           </>
                         ) : isSubmitting ? (
-                          "Processing..."
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Processing...
+                          </>
                         ) : (
                           "Proceed to Payment"
                         )}
@@ -362,7 +385,7 @@ const Checkout = () => {
                   
                   <div className="mt-6 p-4 bg-cherry/10 rounded-md border border-cherry/20">
                     <p className="text-sm text-gray-700">
-                      You can edit your shipping address and other details in the form on the left.
+                      Complete your information on the left to proceed with the secure payment process.
                     </p>
                   </div>
                 </div>

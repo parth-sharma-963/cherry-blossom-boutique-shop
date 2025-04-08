@@ -33,16 +33,13 @@ serve(async (req) => {
         currency: "usd",
         product_data: {
           name: item.product.name,
-          // No images used at all to avoid any URL validation
+          // Removed images to avoid URL validation issues
         },
         unit_amount: Math.round(item.product.price * 100), // Convert to cents
       },
       quantity: item.quantity,
     }));
 
-    // Calculate tax
-    const taxAmount = Math.round(orderInfo.total * 0.08 * 100); // 8% tax in cents
-    
     // Create a Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -76,15 +73,12 @@ serve(async (req) => {
           },
         },
       ],
-      tax_id_collection: {
-        enabled: false,
-      },
       metadata: {
         orderNumber: orderInfo.orderNumber,
       }
     });
 
-    console.log("Stripe session created:", session.id);
+    console.log("Stripe session created successfully:", session.id);
 
     // Return the session ID and URL to the client
     return new Response(
@@ -97,7 +91,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("Error creating payment:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message, details: error }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
