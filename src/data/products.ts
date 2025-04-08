@@ -26,7 +26,7 @@ export const products: Product[] = [
     name: "Cherry Blossom Sundress",
     description: "A beautiful floral sundress with cherry blossom pattern, perfect for spring and summer days.",
     price: 59.99,
-    image: "/images/cherry_blossom_sundress.jpg"
+    image: "/images/cherry_blossom_sundress.jpg",
     category: "Women's Clothing",
     featured: true,
     inStock: true,
@@ -39,7 +39,7 @@ export const products: Product[] = [
     name: "Classic Men's Blazer",
     description: "A sophisticated blazer for men that works well for both formal occasions and casual outings.",
     price: 129.99,
-    image: "/images/classic_mens_blazer.jpg"
+    image: "/images/classic_mens_blazer.jpg",
     category: "Men's Clothing",
     featured: true,
     inStock: true,
@@ -51,7 +51,7 @@ export const products: Product[] = [
     name: "Kids' Cherry Print T-shirt",
     description: "A cute and comfortable t-shirt for kids featuring a playful cherry print design.",
     price: 24.99,
-    image: "/images/kids_cherry_print.jpg"
+    image: "/images/kids_cherry_print.jpg",
     category: "Kids' Clothing",
     featured: false,
     inStock: true,
@@ -63,7 +63,7 @@ export const products: Product[] = [
     name: "Elegant Silk Tie",
     description: "A premium silk tie with subtle pattern, adding sophistication to any formal outfit.",
     price: 45.99,
-    image: "/images/elegant_silk_tie.jpg"
+    image: "/images/elegant_silk_tie.jpg",
     category: "Ties",
     featured: false,
     inStock: true,
@@ -74,7 +74,7 @@ export const products: Product[] = [
     name: "Luxe Leather Shoes",
     description: "Handcrafted leather shoes that combine style, comfort, and durability for everyday wear.",
     price: 159.99,
-    image: "/images/luxe_leather_shoes.jpg"
+    image: "/images/luxe_leather_shoes.jpg",
     category: "Shoes",
     featured: true,
     inStock: true,
@@ -87,7 +87,7 @@ export const products: Product[] = [
     name: "Pearl Cherry Earrings",
     description: "Delicate cherry-shaped earrings with pearl accents, a perfect accessory for any occasion.",
     price: 34.99,
-    image: "/images/pearl_cherry_earrings.jpg"
+    image: "/images/pearl_cherry_earrings.jpg",
     category: "Accessories",
     featured: true,
     inStock: true,
@@ -98,7 +98,7 @@ export const products: Product[] = [
     name: "Women's Denim Jacket",
     description: "A versatile denim jacket that adds a cool, casual layer to any outfit throughout the seasons.",
     price: 79.99,
-    image: "/images/womens_denim_jacket.jpg"
+    image: "/images/womens_denim_jacket.jpg",
     category: "Women's Clothing",
     featured: false,
     inStock: true,
@@ -110,7 +110,7 @@ export const products: Product[] = [
     name: "Men's Casual Chinos",
     description: "Comfortable and stylish chinos that work well for both office and weekend wear.",
     price: 69.99,
-    image: "/images/mens_casual_chinos.jpg"
+    image: "/images/mens_casual_chinos.jpg",
     category: "Men's Clothing",
     featured: false,
     inStock: true,
@@ -124,37 +124,37 @@ export const categories: Category[] = [
   {
     id: 1,
     name: "Women's Clothing",
-    image: "/images/womens_clothing.jpg"
+    image: "/images/womens_clothing.jpg",
     productCount: 24
   },
   {
     id: 2,
     name: "Men's Clothing",
-    image: "/images/mens_clothing.jpg"
+    image: "/images/mens_clothing.jpg",
     productCount: 18
   },
   {
     id: 3,
     name: "Kids' Clothing",
-    image: "/images/kids_clothing.jpg"
+    image: "/images/kids_clothing.jpg",
     productCount: 15
   },
   {
     id: 4,
     name: "Shoes",
-    image: "/images/shoes.jpg"
+    image: "/images/shoes.jpg",
     productCount: 12
   },
   {
     id: 5,
     name: "Ties",
-    image: "/images/ties.jpg"
+    image: "/images/ties.jpg",
     productCount: 8
   },
   {
     id: 6,
     name: "Accessories",
-    image: "/images/accessories.jpg"
+    image: "/images/accessories.jpg",
     productCount: 20
   }
 ];
