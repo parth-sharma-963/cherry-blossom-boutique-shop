@@ -117,7 +117,7 @@ export const products: Product[] = [
     discount: 5,
     sizes: ["28", "30", "32", "34", "36", "38", "40"],
     colors: ["Khaki", "Navy", "Olive", "Gray"]
-  },
+  }
 ];
 
 export const categories: Category[] = [
