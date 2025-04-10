@@ -117,6 +117,18 @@ export const products: Product[] = [
     discount: 5,
     sizes: ["28", "30", "32", "34", "36", "38", "40"],
     colors: ["Khaki", "Navy", "Olive", "Gray"]
+  },
+  {
+    id: 9,
+    name: "Cherry Blossom Perfume",
+    description: "A light and floral fragrance inspired by cherry blossoms in full bloom. Perfect for spring and summer.",
+    price: 85.99,
+    image: "/images/photo-1618160702438-9b02ab6515c9",
+    category: "Accessories",
+    featured: true,
+    inStock: true,
+    discount: 0,
+    colors: ["50ml", "100ml", "150ml"]
   }
 ];
 
@@ -162,3 +174,4 @@ export const categories: Category[] = [
 export const getFeaturedProducts = () => products.filter(product => product.featured);
 export const getProductsByCategory = (category: string) => products.filter(product => product.category === category);
 export const getProductById = (id: number) => products.find(product => product.id === id);
+
