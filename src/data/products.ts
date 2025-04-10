@@ -129,6 +129,17 @@ export const products: Product[] = [
     inStock: true,
     discount: 0,
     colors: ["50ml", "100ml", "150ml"]
+  },
+  {
+    id: 10,
+    name: "Cherry Blossom Tie",
+    description: "An elegant silk tie with a subtle cherry blossom pattern, perfect for adding a touch of spring to your formal attire.",
+    price: 49.99,
+    image: "/images/elegant_silk_tie.jpg",
+    category: "Ties",
+    featured: true,
+    inStock: true,
+    colors: ["Pink", "Light Blue", "Lavender"]
   }
 ];
 
@@ -174,4 +185,3 @@ export const categories: Category[] = [
 export const getFeaturedProducts = () => products.filter(product => product.featured);
 export const getProductsByCategory = (category: string) => products.filter(product => product.category === category);
 export const getProductById = (id: number) => products.find(product => product.id === id);
-
