@@ -1,6 +1,7 @@
+import { supabase } from "@/integrations/supabase/client";
 
 export type Product = {
-  id: number;
+  id: number | string;
   name: string;
   description: string;
   price: number;
@@ -20,6 +21,7 @@ export type Category = {
   productCount: number;
 };
 
+// Static product data remains the same for now, but will be supplemented with Supabase data
 export const products: Product[] = [
   {
     id: 1,
@@ -182,6 +184,47 @@ export const categories: Category[] = [
   }
 ];
 
+// Utility functions to get products
 export const getFeaturedProducts = () => products.filter(product => product.featured);
 export const getProductsByCategory = (category: string) => products.filter(product => product.category === category);
-export const getProductById = (id: number) => products.find(product => product.id === id);
+export const getProductById = (id: number | string) => products.find(product => product.id === id);
+
+// New function to fetch Supabase products and merge with static products
+export const fetchAndMergeProducts = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*');
+    
+    if (error) {
+      console.error('Error fetching products from Supabase:', error);
+      return products; // Return static products if there's an error
+    }
+    
+    if (data && data.length > 0) {
+      // Transform Supabase products to match our Product type
+      const supabaseProducts = data.map(item => ({
+        id: item.id,
+        name: item.name || 'Untitled Product',
+        description: item.description || 'No description available',
+        price: Number(item.price) || 0,
+        image: item.image_url || '/images/elegant_silk_tie.jpg', // Default image
+        category: 'Ties', // Default to Ties category since we're focusing on that
+        featured: true,
+        inStock: (item.stock && item.stock > 0) || true,
+        discount: 0,
+        // Add default sizes and colors if not provided
+        sizes: ['One Size'],
+        colors: ['Default']
+      }));
+      
+      // Merge static products with Supabase products
+      return [...products, ...supabaseProducts];
+    }
+    
+    return products;
+  } catch (error) {
+    console.error('Unexpected error fetching products:', error);
+    return products;
+  }
+};

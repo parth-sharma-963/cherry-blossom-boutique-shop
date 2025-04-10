@@ -1,13 +1,30 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ProductCard from './ProductCard';
 import { Button } from '@/components/ui/button';
 import { ChevronRight } from 'lucide-react';
-import { getFeaturedProducts, Product } from '@/data/products';
+import { getFeaturedProducts, Product, fetchAndMergeProducts } from '@/data/products';
 
 const FeaturedProducts = () => {
-  const featuredProducts = getFeaturedProducts();
+  const [products, setProducts] = useState<Product[]>(getFeaturedProducts());
+  const [loading, setLoading] = useState(false);
+  
+  useEffect(() => {
+    const loadProducts = async () => {
+      setLoading(true);
+      try {
+        const allProducts = await fetchAndMergeProducts();
+        setProducts(allProducts.filter(product => product.featured));
+      } catch (error) {
+        console.error("Failed to load products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadProducts();
+  }, []);
   
   return (
     <section className="py-12 md:py-16 bg-white">
@@ -26,11 +43,17 @@ const FeaturedProducts = () => {
           </Button>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {featuredProducts.map((product: Product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex justify-center items-center h-60">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cherry"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {products.map((product: Product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

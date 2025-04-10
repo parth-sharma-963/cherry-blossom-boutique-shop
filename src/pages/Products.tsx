@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
-import { products, categories } from '@/data/products';
+import { products, categories, Product, fetchAndMergeProducts } from '@/data/products';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -15,16 +15,34 @@ const Products = () => {
   const [searchParams] = useSearchParams();
   const categoryParam = searchParams.get('category');
   
-  const [filteredProducts, setFilteredProducts] = useState(products);
+  const [allProducts, setAllProducts] = useState<Product[]>(products);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>(products);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(categoryParam);
   const [priceRange, setPriceRange] = useState([0, 200]);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
   
   const availableSizes = ["XS", "S", "M", "L", "XL", "XXL"];
 
   useEffect(() => {
-    let filtered = [...products];
+    const loadProducts = async () => {
+      setLoading(true);
+      try {
+        const mergedProducts = await fetchAndMergeProducts();
+        setAllProducts(mergedProducts);
+      } catch (error) {
+        console.error("Failed to load products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadProducts();
+  }, []);
+
+  useEffect(() => {
+    let filtered = [...allProducts];
     
     // Filter by category
     if (selectedCategory) {
@@ -44,7 +62,7 @@ const Products = () => {
     }
     
     setFilteredProducts(filtered);
-  }, [selectedCategory, priceRange, selectedSizes]);
+  }, [selectedCategory, priceRange, selectedSizes, allProducts]);
   
   useEffect(() => {
     if (categoryParam) {

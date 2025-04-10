@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
-import { getProductById } from '@/data/products';
+import { getProductById, Product, fetchAndMergeProducts } from '@/data/products';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Newsletter from '@/components/Newsletter';
@@ -20,14 +20,41 @@ import { toast } from 'sonner';
 
 const ProductDetail = () => {
   const { id } = useParams();
-  const productId = id ? parseInt(id, 10) : 0;
-  const product = getProductById(productId);
-  
+  const [product, setProduct] = useState<Product | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
-  const [selectedSize, setSelectedSize] = useState(product?.sizes ? product.sizes[0] : '');
-  const [selectedColor, setSelectedColor] = useState(product?.colors ? product.colors[0] : '');
+  const [selectedSize, setSelectedSize] = useState<string>('');
+  const [selectedColor, setSelectedColor] = useState<string>('');
   
   const { addToCart } = useCart();
+
+  useEffect(() => {
+    const loadProduct = async () => {
+      setLoading(true);
+      try {
+        const allProducts = await fetchAndMergeProducts();
+        const foundProduct = allProducts.find(p => String(p.id) === id);
+        
+        if (foundProduct) {
+          setProduct(foundProduct);
+          if (foundProduct.sizes && foundProduct.sizes.length > 0) {
+            setSelectedSize(foundProduct.sizes[0]);
+          }
+          if (foundProduct.colors && foundProduct.colors.length > 0) {
+            setSelectedColor(foundProduct.colors[0]);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load product:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    if (id) {
+      loadProduct();
+    }
+  }, [id]);
   
   const incrementQuantity = () => setQuantity(prev => prev + 1);
   const decrementQuantity = () => setQuantity(prev => prev > 1 ? prev - 1 : 1);
@@ -43,11 +70,23 @@ const ProductDetail = () => {
     toast.success(`${product?.name} added to your wishlist!`);
   };
   
-  if (!product) {
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-grow flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cherry"></div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+  
+  if (!product && !loading) {
     return <Navigate to="/products" />;
   }
   
-  const discountedPrice = product.discount 
+  const discountedPrice = product?.discount 
     ? product.price * (1 - product.discount / 100)
     : null;
   
